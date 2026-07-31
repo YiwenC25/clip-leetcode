@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Clip LeetCode",
+  "version": "1.0.0",
+  "description": "Copy the LeetCode problem to your clipboard.",
+  "icons": {
+    "128": "icon.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "yiwenc25@yiwen"
+    }
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "main.js"
+      ],
+      "matches": [
+        "*://*.leetcode.com/problems/*",
+        "*://*.leetcode.com/contest/*/problems/*",
+        "*://*.leetcode.cn/problems/*",
+        "*://*.leetcode.cn/contest/*/problems/*"
+      ]
+    }
+  ]
+}
