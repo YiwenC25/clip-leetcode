@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Clip LeetCode",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Copy the LeetCode problem to your clipboard.",
   "icons": {
     "128": "icon.png"
@@ -11,6 +11,14 @@
       "id": "yiwenc25@yiwen"
     }
   },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "host_permissions": [
+    "*://leetcode.cn/*"
+  ],
   "content_scripts": [
     {
       "js": [
