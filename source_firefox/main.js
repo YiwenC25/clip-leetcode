@@ -5,9 +5,6 @@ const BUTTON_ACTION_TEXT = "Copied!";
 const BUTTON_ACTION_WAIT_TIME = 1000;
 const WAIT_TIME = 1000;
 
-// Class marking injected Chinese translation blocks.
-const ZH_CLASS = "clip-zh-block";
-
 // Object containing button text and extra styles
 const BUTTON_MAP = {
   copy: {
@@ -79,11 +76,8 @@ const copyText = (isMarkdown, targetObj) => {
   // Get title
   title = targetObj.titleDom.innerText;
 
-  // Get main problem description, without any injected translation blocks.
+  // Get main problem description.
   descriptionContent = targetObj.descriptionDom.cloneNode(true);
-  descriptionContent
-    .querySelectorAll("." + ZH_CLASS)
-    .forEach((el) => el.remove());
 
   // Clean the content to be copied
   text = descriptionContent.textContent.replace(/(\n){2,}/g, "\n\n").trim();
@@ -229,68 +223,6 @@ const makeButton = (key, onClick) => {
   return _button;
 };
 
-// Insert each Chinese block below its matching English block. Blocks are
-// paired by tag name with two pointers, since leetcode.cn translations mirror
-// the English block structure (p/pre/ul...).
-// ponytail: tag-order pairing, no semantic matching; misaligns only if the
-// translation restructures blocks — leftovers land at the end.
-const insertTranslation = (html) => {
-  const desc = document.querySelector("[data-track-load=description_content]");
-  if (!desc) return;
-
-  const zhBody = new DOMParser().parseFromString(html, "text/html").body;
-  zhBody.querySelectorAll("script").forEach((s) => s.remove());
-  const zhBlocks = [...zhBody.children].filter((b) => b.textContent.trim());
-
-  let enBlocks = [...desc.children];
-  // Some layouts wrap the whole description in a single div.
-  if (enBlocks.length === 1 && enBlocks[0].children.length > 1) {
-    enBlocks = [...enBlocks[0].children];
-  }
-  const parent = enBlocks[0] ? enBlocks[0].parentElement : desc;
-
-  let j = 0;
-  for (const zb of zhBlocks) {
-    zb.classList.add(ZH_CLASS);
-    zb.style.cssText += `border-left: 2px solid ${MAIN_COLOR}; padding-left: 8px; margin: 4px 0;`;
-    let k = j;
-    while (k < enBlocks.length && enBlocks[k].tagName !== zb.tagName) k++;
-    if (k < enBlocks.length) {
-      enBlocks[k].after(zb);
-      j = k + 1;
-    } else {
-      parent.appendChild(zb);
-    }
-  }
-};
-
-const toggleTranslation = async (chip) => {
-  // Second click removes the translation.
-  const existing = document.querySelectorAll("." + ZH_CLASS);
-  if (existing.length) {
-    existing.forEach((el) => el.remove());
-    return;
-  }
-
-  const slug = getSlug();
-  if (!slug) return;
-
-  const original = chip.textContent;
-  chip.textContent = "…";
-  let html = null;
-  try {
-    html = await browser.runtime.sendMessage({ type: "translate", slug });
-  } catch (e) {}
-  chip.textContent = original;
-
-  if (!html) {
-    chip.textContent = "无翻译";
-    setTimeout(() => (chip.textContent = original), BUTTON_ACTION_WAIT_TIME);
-    return;
-  }
-  insertTranslation(html);
-};
-
 let buttonContainer = null;
 let zhChip = null;
 
@@ -348,29 +280,39 @@ const addButtons = () => {
   }
 };
 
-// Add a "中文" chip after the Hint chip on leetcode.com, styled by cloning an
-// existing chip so it always matches the current design.
+// Add a "中文" chip at the end of the Topics/Companies/Hint chip row on
+// leetcode.com, styled by cloning an existing chip so it always matches the
+// current design. Clicking it opens the leetcode.cn page for the same problem.
 const addZhChip = () => {
   if (!location.hostname.includes("leetcode.com")) return;
   if (zhChip && zhChip.isConnected) return;
 
-  // Innermost element whose text is exactly the chip label.
+  const slug = getSlug();
+  if (!slug) return;
+
+  // A whole chip = direct child of the div.flex.gap-1 row whose text is
+  // exactly the label. (Matching any div/a picks up the chip's nested inner
+  // divs, and inserting after those lands inside another chip.)
   let anchor = null;
   for (const label of ["Hint", "Companies", "Topics"]) {
-    const matches = [...document.querySelectorAll("div, a")].filter(
+    anchor = [...document.querySelectorAll("div.flex.gap-1 > *")].find(
       (el) => el.textContent.trim() === label
     );
-    if (matches.length) {
-      anchor = matches[matches.length - 1];
-      break;
-    }
+    if (anchor) break;
   }
   if (!anchor) return;
 
   zhChip = anchor.cloneNode(true);
-  zhChip.textContent = "中文";
-  zhChip.addEventListener("click", () => toggleTranslation(zhChip));
-  anchor.after(zhChip);
+  zhChip.title = "Switch to the Chinese Problem Page";
+  // Material Design "translate" icon, mirroring the A/文 icon leetcode.cn
+  // uses for its language-switch button. currentColor inherits chip color.
+  zhChip.innerHTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>';
+  zhChip.style.cursor = "pointer";
+  zhChip.addEventListener("click", () =>
+    window.open(`https://leetcode.cn/problems/${slug}/description/`, "_blank")
+  );
+  anchor.parentElement.appendChild(zhChip);
 };
 
 // Poll instead of running once: LeetCode re-renders the header after code

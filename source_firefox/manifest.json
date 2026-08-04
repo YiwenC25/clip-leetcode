@@ -16,9 +16,6 @@
       "background.js"
     ]
   },
-  "host_permissions": [
-    "*://leetcode.cn/*"
-  ],
   "content_scripts": [
     {
       "js": [
