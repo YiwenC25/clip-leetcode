@@ -6,10 +6,11 @@ const getSolutionMap = async () => {
   if (solutionMap) return solutionMap;
   const text = await (await fetch(browser.runtime.getURL("solutions.md"))).text();
   solutionMap = {};
-  // Row: | [123. title](https://leetcode.cn/problems/<slug>/) | [text](solutionURL) |
+  // Row: | 742 | [123. title](https://leetcode.cn/problems/<slug>/) | [text](solutionURL) |
+  // The leading index column is optional (older files omit it).
   // Greedy .* before the last ](url) tolerates nested brackets in link text.
   const re =
-    /^\|\s*\[.*?\]\(https:\/\/leetcode\.cn\/problems\/([^/)]+)\/?\)\s*\|.*\]\((https?:[^)]+)\)\s*\|\s*$/gm;
+    /^\|(?:\s*\d+\s*\|)?\s*\[.*?\]\(https:\/\/leetcode\.cn\/problems\/([^/)]+)\/?\)\s*\|.*\]\((https?:[^)]+)\)\s*\|\s*$/gm;
   for (const m of text.matchAll(re)) solutionMap[m[1]] = m[2];
   return solutionMap;
 };
