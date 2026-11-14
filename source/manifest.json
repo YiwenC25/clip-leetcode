@@ -6,6 +6,9 @@
   "icons": {
     "128": "icon.png"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "js": [
@@ -13,7 +16,9 @@
       ],
       "matches": [
         "*://*.leetcode.com/problems/*",
-        "*://*.leetcode.com/contest/*/problems/*"
+        "*://*.leetcode.com/contest/*/problems/*",
+        "*://*.leetcode.cn/problems/*",
+        "*://*.leetcode.cn/contest/*/problems/*"
       ]
     }
   ]

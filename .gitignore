@@ -1,3 +1,6 @@
 .DS_Store
 *.zip
 *.xpi
+# Build-time copies of the root solutions.md
+source/solutions.md
+source_firefox/solutions.md

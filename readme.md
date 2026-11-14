@@ -16,4 +16,8 @@ You can modify the source code and load the extension in Chrome locally:
 - `Load unpacked` and select the `source` folder
 
 ## Build
-`source zip.sh` to build the zip file for upload.
+`source zip.sh` (or `./zip.ps1` on Windows) to build the zip file for upload.
+
+The solution library lives in `solutions.md` at the repo root. The build
+scripts copy it into the extension folder, so run one before `Load unpacked`;
+without the copy the Solution button is not shown.
